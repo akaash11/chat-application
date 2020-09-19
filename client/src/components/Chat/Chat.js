@@ -19,7 +19,16 @@ const Chat = ({ location }) =>{
         setName(name);
         setRoom(room);
 
-        console.log(socket);
+        socket.emit('join', {name, room}, ()=>{});
+        
+        //for component unmount
+        return () => {
+            socket.emit('disconnect');
+
+            //to turn of one chat instance 
+            socket.off();
+        }
+
     },[ENDPOINT, location.search])
 
     return(

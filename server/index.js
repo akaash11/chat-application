@@ -1,16 +1,21 @@
 const express = require('express');
 const socketio = require('socket.io');
 const http = require('http');
+const cors = require('cors');
 
 const PORT = process.env.PORT || 5000
 
 const router = require('./router')
 
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./users.js');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
-const { addUser, removeUser, getUser, getUsersInRoom } = require('./users.js')
+app.use(router);
+app.use(cors());
+
 
 //arg socket is client insatnce 
 io.on('connection',(socket)=>{
@@ -30,6 +35,8 @@ io.on('connection',(socket)=>{
 
         socket.join(user.room);
 
+        io.to(user.room).emit('roomData',{ room: user.room, users: getUsersInRoom(user.room)})
+
         callback();
     });
 
@@ -37,8 +44,8 @@ io.on('connection',(socket)=>{
     socket.on('sendMessage',(message, callback)=>{
         const user = getUser(socket.id);
 
-        io.to(user.room).emit('message', { user: user.name, text: message})
-
+        io.to(user.room).emit('message', { user: user.name, text: message});
+        io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room) });
         //to-do something after message is send on frontend
         callback();
     })
@@ -52,6 +59,5 @@ io.on('connection',(socket)=>{
     });
 });
 
-app.use(router);
 
 server.listen(PORT, () => console.log(`server has started on port ${PORT}`));

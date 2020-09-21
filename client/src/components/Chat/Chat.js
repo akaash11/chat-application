@@ -9,6 +9,8 @@ import Input from '../Input/Input';
 import Messages from '../Messages/Messages';
 import UserContainer from '../UserContainer/UserContainer';
 
+const ENDPOINT = 'https://at-chat-application.herokuapp.com/';
+
 let socket;
 
 //location come from react-router give prop called location
@@ -19,9 +21,6 @@ const Chat = ({ location }) =>{
     const [messages, setMessages] = useState([]);
     const [users, setUsers] = useState([]);
 
-    const ENDPOINT = 'https://at-chat-application.herokuapp.com/';
-
-
     useEffect(() => {
         const { name, room } = queryString.parse(location.search);
         
@@ -30,7 +29,11 @@ const Chat = ({ location }) =>{
         setName(name);
         setRoom(room);
 
-        socket.emit('join', {name, room}, ()=>{});
+        socket.emit('join', {name, room}, (error)=>{
+            if(error){
+                alert(error);
+            }
+        });
         
         //for component unmount
         return () => {
@@ -40,7 +43,7 @@ const Chat = ({ location }) =>{
             socket.off();
         }
 
-    },[ENDPOINT, location.search])
+    },[location.search])
 
     useEffect(()=>{
         socket.on('message',(message)=> { 
